@@ -7,53 +7,93 @@ import ErrorMessage from './components/ErrorMessage/ErrorMessage';
 import ImageModal from './components/ImageModal/ImageModal';
 import LoadMoreButton from './components/LoadMoreButton/LoadMoreButton';
 
-import { fetchData } from './utils';
+import { fetchData, parseImagesData } from './utils';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
 function App() {
   const [imagesCollection, setImagesCollection] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
-  const [ErrorMessage, setErrorMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
   const [isEndOfData, setIsEndOfData] = useState(true);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false); //wrap app in context provider?
   const [modalImageData, setModalImageData] = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSearch = async searchQuery => {
+  const handleSearch = async (query, isLoadingMore = false) => {
     try {
-      setImagesCollection([]);
+      //check from where request is coming and reset for new search if needed
+      if (!isLoadingMore) {
+        setImagesCollection([]);
+        setCurrentPage(0);
+      }
       setLoading(true);
       setError(false);
       setErrorMessage('');
-      setIsEndOfData(false);
-      const data = await fetchData({ searchQuery });
-      setImagesCollection(data);
-      console.log(data);
+      const response = await fetchData({
+        query,
+        page: currentPage + 1,
+      });
+      console.log(response);
+      if (response.data.total === 0) {
+        setIsEndOfData(true);
+        throw new Error('No images found for the given search query.');
+      }
+      setImagesCollection(prevCollection => [
+        ...prevCollection,
+        ...parseImagesData(response.data.results),
+      ]);
+      // check if the fetched page is the last page
+      if (
+        response.data.total_pages === 1 ||
+        currentPage + 1 >= response.data.total_pages
+      ) {
+        setIsEndOfData(true);
+      }
+      //another check just so there's no funky data
+      if (response.data.total_pages > 1) {
+        setIsEndOfData(false);
+        setCurrentPage(prevPage => prevPage + 1); //update page number
+      }
     } catch (error) {
       setError(true);
       setErrorMessage(error.message);
     } finally {
       setLoading(false);
+      //check and save the search query for next page button
+      if (query !== searchQuery) {
+        setSearchQuery(query);
+      }
     }
+  };
+
+  const handleImageClick = imageData => {
+    setModalImageData(imageData); // Set the clicked image data
+    setIsImageModalOpen(true); // Open the modal
+  };
+
+  const handleCloseModal = () => {
+    setIsImageModalOpen(false); // Close the modal
   };
 
   return (
     <>
       <SearchBar onSearch={handleSearch} />
       {setImagesCollection.length > 0 && (
-        <ImageGallery images={imagesCollection} />
+        <ImageGallery
+          images={imagesCollection}
+          onImageClick={handleImageClick}
+        />
       )}
       {loading && <Loader />}
-      {error && <ErrorMessage ErrorMessage={ErrorMessage} />}
-
-      {isEndOfData && (
-        <LoadMoreButton onClick={() => console.log('Load more images')} />
+      {error && <ErrorMessage errorMessage={errorMessage} />}
+      {!isEndOfData && (
+        <LoadMoreButton onLoadMore={() => handleSearch(searchQuery, true)} />
       )}
       {isImageModalOpen && (
-        <ImageModal
-          imageUrl="https://example.com/image.jpg"
-          altText="Example Image"
-        />
+        <ImageModal imageData={modalImageData} onClose={handleCloseModal} />
       )}
     </>
   );

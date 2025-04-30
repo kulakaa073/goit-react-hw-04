@@ -2,7 +2,7 @@ import axios from 'axios';
 
 axios.defaults.baseURL = 'https://api.unsplash.com/';
 
-export function fetchData({ page = 1, searchQuery: query = '' }) {
+export function fetchData({ query = '', page = 1 }) {
   const options = {
     url: 'search/photos',
     params: {
@@ -18,4 +18,15 @@ export function fetchData({ page = 1, searchQuery: query = '' }) {
     params: options.params,
     headers: options.headers,
   });
+}
+
+export function parseImagesData(data) {
+  return data.map(image => ({
+    id: image.id,
+    webformatURL: image.urls.small,
+    largeImageURL: image.urls.regular,
+    altText: image.alt_description || 'No text available',
+    author: image.user.name || 'Unknown',
+    description: image.description || 'No description available',
+  }));
 }

@@ -1,7 +1,7 @@
-export default function ErrorMessage({ ErrorMessage }) {
+export default function ErrorMessage({ errorMessage }) {
   return (
     <div>
-      <p>{ErrorMessage}</p>
+      <p>{errorMessage}</p>
     </div>
   );
 }
