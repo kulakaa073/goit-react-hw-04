@@ -32,34 +32,33 @@ function App() {
       setLoading(true);
       setError(false);
       setErrorMessage('');
-      const response = await fetchData({
+      const data = await fetchData({
         query,
         page: currentPage + 1,
       });
-      console.log(response);
-      if (response.data.total === 0) {
+      if (data.total === 0) {
         setIsEndOfData(true);
         throw new Error('No images found for the given search query.');
       }
       setImagesCollection(prevCollection => [
         ...prevCollection,
-        ...parseImagesData(response.data.results),
+        ...parseImagesData(data.results),
       ]);
       // check if the fetched page is the last page
-      if (
-        response.data.total_pages === 1 ||
-        currentPage + 1 >= response.data.total_pages
-      ) {
+      if (data.total_pages === 1 || currentPage + 1 >= data.total_pages) {
         setIsEndOfData(true);
       }
       //another check just so there's no funky data
-      if (response.data.total_pages > 1) {
+      if (data.total_pages > 1) {
         setIsEndOfData(false);
         setCurrentPage(prevPage => prevPage + 1); //update page number
       }
     } catch (error) {
       setError(true);
-      setErrorMessage(error.message);
+      setErrorMessage(
+        "Sorry, we're encountered an error! Please, reload the page and try again."
+      );
+      console.log(error);
     } finally {
       setLoading(false);
       //check and save the search query for next page button

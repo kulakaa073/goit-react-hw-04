@@ -1,12 +1,9 @@
 .content {
   max-width: 90%;
   max-height: 90%;
-  width: auto;
-  height: auto;
   position: relative;
   overflow: auto;
   background-color: aliceblue;
-  margin: auto;
 }
 
 .container {
@@ -39,7 +36,7 @@
   position: fixed;
   right: 30px;
   top: 30px;
-  z-index: 10060;
+  z-index: 99999;
   margin-top: -14px;
   margin-right: -14px;
   height: 44px;
