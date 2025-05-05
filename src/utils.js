@@ -8,7 +8,7 @@ export function fetchData({ query = '', page = 1 }) {
     params: {
       page: page,
       query: query,
-      per_page: 10,
+      per_page: 12,
     },
     headers: {
       Authorization: import.meta.env.VITE_AUTH_TOKEN,
@@ -28,5 +28,7 @@ export function parseImagesData(data) {
     altText: image.alt_description || 'No text available',
     author: image.user.name || 'Unknown',
     description: image.description || 'No description available',
+    width: image.width,
+    height: image.height,
   }));
 }

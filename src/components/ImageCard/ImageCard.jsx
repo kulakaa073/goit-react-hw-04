@@ -1,10 +1,12 @@
+import css from './ImageCard.module.css';
+
 export default function ImageCard({ imageData, onImageClick }) {
   const handleClick = () => {
-    onImageClick(imageData);
+    onImageClick(imageData.id);
   };
 
   return (
-    <div onClick={handleClick}>
+    <div className={css.container} onClick={handleClick}>
       <img src={imageData.webformatURL} alt={imageData.altText} />
     </div>
   );

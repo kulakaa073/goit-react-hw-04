@@ -17,8 +17,8 @@ function App() {
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isEndOfData, setIsEndOfData] = useState(true);
-  const [isImageModalOpen, setIsImageModalOpen] = useState(false); //wrap app in context provider?
-  const [modalImageData, setModalImageData] = useState({});
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [modalImageId, setModalImageId] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -69,13 +69,14 @@ function App() {
     }
   };
 
-  const handleImageClick = imageData => {
-    setModalImageData(imageData); // Set the clicked image data
+  const handleImageClick = imageId => {
+    setModalImageId(imageId); // Set the clicked image data
     setIsImageModalOpen(true); // Open the modal
   };
 
   const handleCloseModal = () => {
     setIsImageModalOpen(false); // Close the modal
+    setModalImageId(null);
   };
 
   return (
@@ -93,7 +94,11 @@ function App() {
         <LoadMoreButton onLoadMore={() => handleSearch(searchQuery, true)} />
       )}
       {isImageModalOpen && (
-        <ImageModal imageData={modalImageData} onClose={handleCloseModal} />
+        <ImageModal
+          imageData={imagesCollection.find(image => image.id === modalImageId)}
+          isImageModalOpen={isImageModalOpen}
+          onClose={handleCloseModal}
+        />
       )}
     </>
   );
