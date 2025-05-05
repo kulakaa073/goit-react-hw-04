@@ -2,7 +2,7 @@ import axios from 'axios';
 
 axios.defaults.baseURL = 'https://api.unsplash.com/';
 
-export const fetchData = async ({ query = '', page = 1 }) => {
+export const fetchImages = async (query = '', page = 1) => {
   const options = {
     url: 'search/photos',
     params: {
@@ -19,7 +19,10 @@ export const fetchData = async ({ query = '', page = 1 }) => {
     headers: options.headers,
   });
 
-  return response.data;
+  return {
+    imagesData: response.data.results,
+    totalPages: response.data.total_pages,
+  };
 };
 
 export function parseImagesData(data) {
@@ -61,4 +64,12 @@ export function scaleImageToRatio(image) {
     width: imageWidth + 'px',
     height: imageHeight + 'px',
   };
+}
+
+export function scrollPage() {
+  window.scrollBy({
+    top: window.innerHeight,
+    left: 0,
+    behavior: 'smooth',
+  });
 }

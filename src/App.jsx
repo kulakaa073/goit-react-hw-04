@@ -7,66 +7,56 @@ import ErrorMessage from './components/ErrorMessage/ErrorMessage';
 import ImageModal from './components/ImageModal/ImageModal';
 import LoadMoreButton from './components/LoadMoreButton/LoadMoreButton';
 
-import { fetchData, parseImagesData } from './utils';
+import { fetchImages, parseImagesData, scrollPage } from './utils';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 function App() {
   const [imagesCollection, setImagesCollection] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
-  const [isEndOfData, setIsEndOfData] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
-  const [modalImageId, setModalImageId] = useState({});
-  const [currentPage, setCurrentPage] = useState(0);
+  const [modalImageId, setModalImageId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
+  const [totalPages, setTotalPages] = useState(0);
 
-  const handleSearch = async (query, isLoadingMore = false) => {
-    try {
-      //check from where request is coming and reset for new search if needed
-      if (!isLoadingMore) {
-        setImagesCollection([]);
-        setCurrentPage(0);
-      }
-      setLoading(true);
-      setError(false);
-      setErrorMessage('');
-      const data = await fetchData({
-        query,
-        page: currentPage + 1,
-      });
-      if (data.total === 0) {
-        setIsEndOfData(true);
-        throw new Error('No images found for the given search query.');
-      }
-      setImagesCollection(prevCollection => [
-        ...prevCollection,
-        ...parseImagesData(data.results),
-      ]);
-      // check if the fetched page is the last page
-      if (data.total_pages === 1 || currentPage + 1 >= data.total_pages) {
-        setIsEndOfData(true);
-      }
-      //another check just so there's no funky data
-      if (data.total_pages > 1) {
-        setIsEndOfData(false);
-        setCurrentPage(prevPage => prevPage + 1); //update page number
-      }
-    } catch (error) {
-      setError(true);
-      setErrorMessage(
-        "Sorry, we're encountered an error! Please, reload the page and try again."
-      );
-      console.log(error);
-    } finally {
-      setLoading(false);
-      //check and save the search query for next page button
-      if (query !== searchQuery) {
-        setSearchQuery(query);
+  const handleSearch = query => {
+    setSearchQuery(query);
+    setImagesCollection([]);
+    setCurrentPage(1);
+  };
+
+  const incrementPage = () => {
+    setCurrentPage(currentPage + 1);
+  };
+
+  useEffect(() => {
+    if (searchQuery === '') {
+      return;
+    }
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        setIsError(false);
+        const data = await fetchImages(searchQuery, currentPage);
+        setImagesCollection(prevCollection => [
+          ...prevCollection,
+          ...parseImagesData(data.imagesData),
+        ]);
+        setTotalPages(data.totalPages);
+      } catch (error) {
+        setIsError(true);
+        console.log(error);
+      } finally {
+        setIsLoading(false);
       }
     }
-  };
+
+    fetchData();
+  }, [searchQuery, currentPage]);
+
+  const isLastPage = currentPage === totalPages - 1;
 
   const handleImageClick = imageId => {
     setModalImageId(imageId); // Set the clicked image data
@@ -78,6 +68,10 @@ function App() {
     setModalImageId(null);
   };
 
+  useEffect(() => {
+    scrollPage();
+  }, [imagesCollection]);
+
   return (
     <>
       <SearchBar onSearch={handleSearch} />
@@ -87,10 +81,10 @@ function App() {
           onImageClick={handleImageClick}
         />
       )}
-      {loading && <Loader />}
-      {error && <ErrorMessage errorMessage={errorMessage} />}
-      {!isEndOfData && (
-        <LoadMoreButton onLoadMore={() => handleSearch(searchQuery, true)} />
+      {isLoading && <Loader />}
+      {isError && <ErrorMessage />}
+      {imagesCollection.length > 0 && !isLastPage && !isLoading && (
+        <LoadMoreButton onLoadMore={incrementPage} />
       )}
       {isImageModalOpen && (
         <ImageModal
