@@ -75,7 +75,7 @@ function App() {
   return (
     <>
       <SearchBar onSearch={handleSearch} />
-      {setImagesCollection.length > 0 && (
+      {imagesCollection.length > 0 && (
         <ImageGallery
           images={imagesCollection}
           onImageClick={handleImageClick}
